@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+Tailwind CSS framework 
+  - CSS on the go (in the same file)
+  - reusability
+  - less bundle size
+  - flexible UI
+  PROS: 
+    - code less
+    - easy to use
+    - no duplicate css
+    - bundle size is small 
+    - takes less time 
+    - easy to debug
+  CONS:
+    - high initial learning curve
+    - readibility is an issue
+*/
