@@ -20,7 +20,7 @@ const Header = ({ setLogin }) => {
           <Link className="px-2" to="/">
             Home
           </Link>
-          <Link className="px-2" to="/about">
+          <Link className="px-2" to="/about">``
             About
           </Link>
           <Link className="px-2" to="/contact">
