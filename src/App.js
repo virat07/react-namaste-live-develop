@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import ReactDOM from "react-dom/client";
 import Header from "./components/Header";
 import Body from "./components/Body";
@@ -11,6 +11,9 @@ import Error from "./components/Error";
 import Contact from "./components/Contact";
 import RestaurantMenu from "./components/RestrauntMenu";
 import SignupForm from "./components/Login";
+import UserContext from "./utils/UserContext";
+import Instamart from "./components/Instamart";
+import { ShimmerComponent } from "./components/ShimmerUI";
 // Composing Comopnentss
 // NAMED EXPORT import is nothing but when we export a component without default keyword we use { } in the import
 // whereas when we export using DEFAULT keywoard then we use just the component name! Also remember we can't export 2 components in default
@@ -22,26 +25,36 @@ import SignupForm from "./components/Login";
 // routing configuration
 const AppLayout = () => {
   const [loggedIn, setLogin] = useState(true);
+  const [user, setUser] = useState({
+    name: "Bharat Gupta",
+    email: "support@namastedev-bharat.com",
+  });
+
   useEffect(() => {
     const checkLoginUser = localStorage.getItem("login");
     setLogin(checkLoginUser);
   }, []);
-  const handleUser = ()=>{
-    if(loggedIn) localStorage.clear();
+  const handleUser = () => {
+    if (loggedIn) localStorage.clear();
     setLogin(!loggedIn);
-  }
+  };
 
   return !loggedIn ? (
-    <SignupForm handleUser={handleUser}/>
+    <SignupForm handleUser={handleUser} />
   ) : (
-    <>
+    <UserContext.Provider
+      value={{
+        user: user,
+        setUser: setUser,
+      }}
+    >
       <Header setLogin={handleUser} />
       <Outlet />
       {/* <About />
       <Body />
       <Contact /> */}
       <Footer />
-    </>
+    </UserContext.Provider>
   );
 };
 // I want to render my about in between header and footer for that i have to make my applayout as a children of it. using children keyword.
@@ -68,6 +81,14 @@ const appRouter = createBrowserRouter([
       {
         path: "/restaurant/:id", // dynamic id
         element: <RestaurantMenu />,
+      },
+      {
+        path: "/instamart",
+        element: (
+          <Suspense fallback={<ShimmerComponent />}>
+            <Instamart />
+          </Suspense>
+        ),
       },
     ],
   },
