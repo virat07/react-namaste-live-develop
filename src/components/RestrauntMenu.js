@@ -1,47 +1,54 @@
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom"; // reading id from the browser url
-import { IMG_CDN_URL } from "./config";
-import { ShimmerComponent } from "./ShimmerUI";
-const RestaurantMenu = () => {
-  const [menuData, setMenuData] = useState(null);
-  const { id } = useParams();
-  useEffect(() => {
-    fetchMenu();
-  }, []);
-  async function fetchMenu() {
-    const data = await fetch(
-      "https://www.swiggy.com/dapi/menu/v4/full?lat=32.7060625&lng=74.8803125&menuId=" +
-        id
-    );
-    const json = await data.json();
-    setMenuData(json.data);
-  }
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { IMG_CDN_URL } from "../contants";
+import useRestaurant from "../utils/useRestaurant";
+import Shimmer from "./Shimmer";
+import { addItem } from "../utils/cartSlice";
+import { useDispatch } from "react-redux";
 
-  return !menuData ? (
-    <ShimmerComponent />
+const RestaurantMenu = () => {
+  const { resId } = useParams();
+
+  const restaurant = useRestaurant(resId);
+
+  const dispatch = useDispatch();
+
+  const addFoodItem = (item) => {
+    dispatch(addItem(item));
+  };
+
+  return !restaurant ? (
+    <Shimmer />
   ) : (
-    <div className="menu">
+    <div className="flex">
       <div>
-        <h1>{menuData.name}</h1>
-        <img
-          src={IMG_CDN_URL + menuData.cloudinaryImageId}
-          alt={menuData.data}
-        />
-        <h3>{menuData.area}</h3>
-        <h3>{menuData.city}</h3>
-        <h3>{menuData.avgRating}</h3>
-        <h3>{menuData.costForTwoMsg}</h3>
+        <h1>Restraunt id: {resId}</h1>
+        <h2>{restaurant?.name}</h2>
+        <img src={IMG_CDN_URL + restaurant?.cloudinaryImageId} />
+        <h3>{restaurant?.area}</h3>
+        <h3>{restaurant?.city}</h3>
+        <h3>{restaurant?.avgRating} stars</h3>
+        <h3>{restaurant?.costForTwoMsg}</h3>
       </div>
-      {/* object values making it in array */}
-      <div>
+      <div className="p-5">
         <h1>Menu</h1>
-        <ul>
-          {Object.values(menuData?.menu?.items).map((item) => (
-            <li key={item.id}>{item.name}</li>
+        <ul data-testid="menu">
+          {Object.values(restaurant?.menu?.items).map((item) => (
+            <li key={item.id}>
+              {item.name} -{" "}
+              <button
+                data-testid="addBtn"
+                className="p-1 bg-green-50"
+                onClick={() => addFoodItem(item)}
+              >
+                Add
+              </button>
+            </li>
           ))}
         </ul>
       </div>
     </div>
   );
 };
+
 export default RestaurantMenu;

@@ -1,73 +1,93 @@
-import { useEffect, useState } from "react";
+import { restaurantList } from "../contants";
+import RestaurantCard from "./RestaurantCard";
+import { useState, useEffect, useContext } from "react";
+import Shimmer from "./Shimmer";
 import { Link } from "react-router-dom";
-import { RestrauntCard } from "./RestrauntCard";
-import { ShimmerComponent } from "./ShimmerUI";
-// hooks is a normal functions
+import { filterData } from "../utils/helper";
+import useOnline from "../utils/useOnline";
+import UserContext from "../utils/UserContext";
 
-export default Body = () => {
-  const [searchText, setSearchText] = useState("");
-  const [filterRestaurants, setFilterRestaurants] = useState([]);
+const Body = () => {
   const [allRestaurants, setAllRestaurants] = useState([]);
-  const filterData = (searchText, restaurants) => {
-    return restaurants.filter((restaurant) =>
-      restaurant?.data?.name?.toLowerCase().includes(searchText.toLowerCase())
-    );
-  };
+  const [filteredRestaurants, setFilteredRestaurants] = useState([]);
+  const [searchText, setSearchText] = useState("");
+  const { user, setUser } = useContext(UserContext);
+
   useEffect(() => {
     getRestaurants();
   }, []);
-  //if no depenedency is added then it will be called on every render.
-
-  //cdn is used for storing img
 
   async function getRestaurants() {
     const data = await fetch(
-      "https://www.swiggy.com/dapi/restaurants/list/v5?lat=32.7060625&lng=74.8803125&page_type=DESKTOP_WEB_LISTING"
+      "https://www.swiggy.com/dapi/restaurants/list/v5?lat=12.9351929&lng=77.62448069999999&page_type=DESKTOP_WEB_LISTING"
     );
     const json = await data.json();
-    console.log(json.data?.cards[2]?.data?.data?.cards);
     setAllRestaurants(json?.data?.cards[2]?.data?.data?.cards);
-    setFilterRestaurants(json?.data?.cards[2]?.data?.data?.cards);
+    setFilteredRestaurants(json?.data?.cards[2]?.data?.data?.cards);
   }
-  // conditional rendering:-
-  return !allRestaurants ? (
-    <ShimmerComponent />
+  if (!allRestaurants) return null;
+
+  return allRestaurants?.length === 0 ? (
+    <Shimmer />
   ) : (
     <>
-      <div className=" my-5 shadow-lg border border-cyan-900">
+      <div className="search-container p-5 bg-pink-50 my-5">
         <input
+          data-testid="search-input"
           type="text"
-          className="focus:bg-slate-200 focus:text-black"
+          className="focus:bg-green-200 p-2 m-2"
           placeholder="Search"
           value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
+          onChange={(e) => {
+            setSearchText(e.target.value);
+          }}
         />
         <button
-          className="p-2 m-2 bg-green-400 rounded-md hover:first-letter:font-bold  border hover:bg-green-600"
+          data-testid="search-btn"
+          className="p-2 m-2 bg-purple-900 hover:bg-gray-500 text-white rounded-md"
           onClick={() => {
+            //need to filter the data
             const data = filterData(searchText, allRestaurants);
-            setFilterRestaurants(data);
+            // update the state - restaurants
+            setFilteredRestaurants(data);
           }}
         >
           Search
         </button>
+        <input
+          value={user.name}
+          onChange={(e) =>
+            setUser({
+              ...user,
+              name: e.target.value,
+            })
+          }
+        ></input>
+        <input
+          value={user.email}
+          onChange={(e) =>
+            setUser({
+              ...user,
+              email: e.target.value,
+            })
+          }
+        ></input>
       </div>
-      <div className=" flex flex-wrap ">
-        {filterRestaurants && filterRestaurants?.length === 0 ? (
-          <h1>No Restaurant match you filter! </h1>
-        ) : (
-          filterRestaurants?.map((restaurant) => {
-            return (
-              <Link
-                to={`/restaurant/${restaurant.data.id}`}
-                key={restaurant.data.id}
-              >
-                <RestrauntCard {...restaurant.data} />
-              </Link>
-            );
-          })
-        )}
+      <div className="flex flex-wrap " data-testid="res-list">
+        {/* You have to write logic for NO restraunt fount here */}
+        {filteredRestaurants.map((restaurant) => {
+          return (
+            <Link
+              to={"/restaurant/" + restaurant.data.id}
+              key={restaurant.data.id}
+            >
+              <RestaurantCard {...restaurant.data} />
+            </Link>
+          );
+        })}
       </div>
     </>
   );
 };
+
+export default Body;
